@@ -30,8 +30,19 @@ void serial_write_char(char a) {
 }
 
 void serial_write_string(const char* str) {
-    for (size_t i = 0; str[i] != 0; i++) {
-        serial_write_char(str[i]);
+    while (*str) {
+        if (*str == '\n') {
+            // First \r\n to start a new line
+            serial_write_char('\r');
+            serial_write_char('\n');
+            // Second \r\n to create a blank line
+            serial_write_char('\r');
+            serial_write_char('\n');
+        } else {
+            serial_write_char(*str);
+        }
+        str++;
     }
+
 }
 

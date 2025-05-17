@@ -1,10 +1,11 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+
 #include "limine.h"
 #include "serial.h"
-
-
+#include "goonal.h"
+#include "GDT.h"
 // Set the base revision to 3, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
 // See specification for further info.
@@ -90,12 +91,19 @@ int memcmp(const void *s1, const void *s2, size_t n) {
 }
 
 // Halt and catch fire function.
-static void hcf(void) {
+void hcf(void) {
     for (;;) {
         asm ("hlt");
     }
 }
 
+// kernal error function
+void kerror(char *msg) 
+{	
+	serial_init();
+	serial_write_string(msg);
+	hcf();
+}
 
 
 // VGA_TERMINAL STUFF
@@ -197,11 +205,11 @@ void terminal_writestring(const char* data)
 // If renaming kmain() to something else, make sure to change the
 // linker script accordingly.
 void kmain(void) {
-
-
-    serial_init();
-    serial_write_string("Hello from the serial port!\n");
-    // We're done, just hang...
+	serial_init();
+	serial_write_string("Gooning has it\n");
+	setup_gdt();
+	
+	serial_write_string("Goon the jewels coming to you live from the goon cave\n");
     hcf();
 }
 
