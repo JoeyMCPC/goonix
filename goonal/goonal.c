@@ -8,6 +8,7 @@
 #include "GDT.h"
 #include "interrupt.h"
 #include "framebuffer.h"
+#include "page_frame_allocation.h"
 // Set the base revision to 3, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
 // See specification for further info.
@@ -20,11 +21,6 @@ static volatile LIMINE_BASE_REVISION(3);
 // be made volatile or equivalent, _and_ they should be accessed at least
 // once or marked as used with the "used" attribute as done here.
 
-__attribute__((used, section(".limine_requests")))
-static volatile struct limine_framebuffer_request framebuffer_request = {
-    .id = LIMINE_FRAMEBUFFER_REQUEST,
-    .revision = 0
-};
 
 // Finally, define the start and end markers for the Limine requests.
 // These can also be moved anywhere, to any .c file, as seen fit.
@@ -210,6 +206,31 @@ void terminal_writestring(const char* data)
 }
 
 
+void test_page_allocator() {
+    fb_terminal_writestring("Allocating 3 frames:\n");
+
+    pageframe_t a = kalloc_frame();
+    pageframe_t b = kalloc_frame();
+    pageframe_t c = kalloc_frame();
+
+    fb_terminal_writestring("Frame A: "); print_hex64(a); fb_terminal_writestring("\n");
+    fb_terminal_writestring("Frame B: "); print_hex64(b); fb_terminal_writestring("\n");
+    fb_terminal_writestring("Frame C: "); print_hex64(c); fb_terminal_writestring("\n");
+
+    fb_terminal_writestring("Freeing frame B and reallocating:\n");
+    kfree_frame(b);
+    pageframe_t d = kalloc_frame();
+
+    fb_terminal_writestring("Frame D (should match B): "); print_hex64(d); fb_terminal_writestring("\n");
+
+    if (d == b) {
+        fb_terminal_writestring("✅ Allocator reused the freed frame.\n");
+    } else {
+        fb_terminal_writestring("❌ Allocator did not reuse the freed frame.\n");
+    }
+}
+
+
 // The following will be our kernel's entry point.
 // If renaming kmain() to something else, make sure to change the
 // linker script accordingly.
@@ -221,15 +242,15 @@ void kmain(void) {
 
     	fb_terminal_init(framebuffer_request.response->framebuffers[0]);
 
-    	fb_terminal_writestring("I AM LITERALLY GOONING EVERYWHERE!\n GOON THE JEWELS COMING TO YOU LIVE FROM THE GOON CAVE LAST TWO \n GOONERS ALIVE AND STILL EDGING");
+    	fb_terminal_writestring("I AM LITERALLY GOONING TO GOONER GARTWELL WHITE HE IS WHITER THAN THE FEMBOY MILK I DRINK DAILY\n");
 	serial_write_string("Coming to you live from the serial port last two gooners alive still edging it");
 	serial_write_string("Gooning has it\n");
 	setup_gdt();
 	idt_init();
 	
 	serial_write_string("Goon the jewels coming to you live from the goon cave\n");
-	clear_framebuffers(0x000000);
 	fb_terminal_writestring("My name is Gooner gartwell Ghite. This is my goonfession");
+	test_page_allocator();
     hcf();
 }
 

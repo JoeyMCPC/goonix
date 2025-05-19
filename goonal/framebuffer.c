@@ -135,8 +135,11 @@ char font8x8_basic[128][8] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}    // U+007F
 };
 
-extern volatile struct limine_framebuffer_request framebuffer_request;
-
+__attribute__((used, section(".limine_requests")))
+volatile struct limine_framebuffer_request framebuffer_request = {
+    .id = LIMINE_FRAMEBUFFER_REQUEST,
+    .revision = 0
+};
 void clear_framebuffers(uint32_t color) {
     if (framebuffer_request.response == NULL || framebuffer_request.response->framebuffer_count == 0) {
         return;
@@ -209,3 +212,14 @@ void fb_terminal_writestring(const char* str) {
     }
 }
 
+void print_hex64(uint64_t val) {
+    char hex_chars[] = "0123456789ABCDEF";
+    char buffer[17];
+    buffer[16] = '\0';
+    for (int i = 15; i >= 0; i--) {
+        buffer[i] = hex_chars[val & 0xF];
+        val >>= 4;
+    }
+    fb_terminal_writestring("0x");
+    fb_terminal_writestring(buffer);
+}
