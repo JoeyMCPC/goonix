@@ -6,6 +6,8 @@
 #include "serial.h"
 #include "goonal.h"
 #include "GDT.h"
+#include "interrupt.h"
+#include "framebuffer.h"
 // Set the base revision to 3, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
 // See specification for further info.
@@ -156,6 +158,8 @@ uint16_t* terminal_buffer = (uint16_t*)VGA_MEMORY;
 
 void terminal_initialize(void) 
 {
+	serial_init();
+	serial_write_string("Hey yal\n");
 	terminal_row = 0;
 	terminal_column = 0;
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
@@ -163,6 +167,7 @@ void terminal_initialize(void)
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
+			serial_write_string("Goon the jewels coming to you live from the JU$T");
 			terminal_buffer[index] = vga_entry(' ', terminal_color);
 		}
 	}
@@ -191,12 +196,16 @@ void terminal_putchar(char c)
 
 void terminal_write(const char* data, size_t size) 
 {
+	serial_init();
+	serial_write_string("Gooners Assemble!!! \n");
 	for (size_t i = 0; i < size; i++)
 		terminal_putchar(data[i]);
 }
 
 void terminal_writestring(const char* data) 
 {
+	serial_init();
+	serial_write_string("I Nate Henry");
 	terminal_write(data, strlen(data));
 }
 
@@ -206,10 +215,21 @@ void terminal_writestring(const char* data)
 // linker script accordingly.
 void kmain(void) {
 	serial_init();
+	if (framebuffer_request.response == NULL || framebuffer_request.response->framebuffer_count < 1) {
+        	kerror("No framebuffer available!");
+    	}
+
+    	fb_terminal_init(framebuffer_request.response->framebuffers[0]);
+
+    	fb_terminal_writestring("I AM LITERALLY GOONING EVERYWHERE!\n GOON THE JEWELS COMING TO YOU LIVE FROM THE GOON CAVE LAST TWO \n GOONERS ALIVE AND STILL EDGING");
+	serial_write_string("Coming to you live from the serial port last two gooners alive still edging it");
 	serial_write_string("Gooning has it\n");
 	setup_gdt();
+	idt_init();
 	
 	serial_write_string("Goon the jewels coming to you live from the goon cave\n");
+	clear_framebuffers(0x000000);
+	fb_terminal_writestring("My name is Gooner gartwell Ghite. This is my goonfession");
     hcf();
 }
 

@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
+// important constants
+#define GDT_OFFSET_NULL         0x00
+#define GDT_OFFSET_KERNEL_CODE  0x08  // 1 * 8
+#define GDT_OFFSET_KERNEL_DATA  0x10  // 2 * 8
+
 // I still don't know what the fuck a GDT is but it is apparently important 
 struct GDT {
     uint32_t base;
