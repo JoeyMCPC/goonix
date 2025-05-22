@@ -11,65 +11,49 @@ uint8_t frame_map[MAX_FRAMES] = { 0 };     // or
 // we need to know this so we dont "accidentally" allocate some of the memory needed for the kernal
 // to the gooning machine that is the GOOSH (i am writing this comment before that is made)
 extern uint32_t end_of_kernel;
-
-static pageframe_t kalloc_frame_int()
-{
-        uint32_t i = 0;
-        while(frame_map[i] != FREE)
-        {
-                i++;
-                if(i == npages)
-                {
-                        return(ERROR);
-                }
+pageframe_t kalloc_frame_int() {
+    for (uint32_t i = 0; i < npages; i++) {
+        if (frame_map[i] == FREE) {
+            frame_map[i] = USED;
+            return startframe + (i * 0x1000);
         }
-        frame_map[i] = USED;
-        return(startframe + (i*0x1000));//return the address of the page frame based on the location declared free
-        //in the array
+    }
+    return ERROR;
 }
 
 // angry gcc fix
 pageframe_t pre_frames[128];
 
+pageframe_t kalloc_frame() {
+    static uint8_t allocate = 1;
+    static uint8_t pframe = 0;
+    pageframe_t ret;
 
-pageframe_t kalloc_frame()
-{
-        static uint8_t allocate = 1;//whether or not we are going to allocate a new set of preframes
-        static uint8_t pframe = 0;
-        pageframe_t ret;
-        
-        if(pframe == 20)
-        {
-                allocate = 1;
-        }
+    if (pframe == 20) {
+        allocate = 1;
+    }
 
-        if(allocate == 1)
-        {
-                for(int i = 0; i<20; i++)
-                {
-                        pre_frames[i] = kalloc_frame_int();
-                }
-                pframe = 0;
-                allocate = 0;
+    if (allocate) {
+        for (int i = 0; i < 20; i++) {
+            pre_frames[i] = kalloc_frame_int();
         }
-        ret = pre_frames[pframe];
-        pframe++;
-        return(ret);
+        pframe = 0;
+        allocate = 0;
+    }
+
+    ret = pre_frames[pframe++];
+    return ret;
 }
 
-void kfree_frame(pageframe_t a)
-{
-                a = a - startframe;//get the offset from the first frame
-                if(a == 0)//in case it is the first frame we are freeing
-                {
-                       uint32_t index = (uint32_t)a;
-                       frame_map[index] = FREE;
-                }
-                else{
-                       a = a;//divide by 4kb to get the index to declare free
-                       uint32_t index = ((uint32_t)a)/0x1000;
-                       frame_map[index] = FREE;
-                    }
-}
 
+
+// takes a memory address and frees it up 
+void kfree_frame(pageframe_t addr) {
+    if (addr < startframe) return; // prevent freeing invalid memory
+
+    uint32_t index = (addr - startframe) / 0x1000;
+    if (index < npages) {
+        frame_map[index] = FREE;
+    }
+}
 

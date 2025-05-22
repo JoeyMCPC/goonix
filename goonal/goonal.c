@@ -6,9 +6,11 @@
 #include "serial.h"
 #include "goonal.h"
 #include "GDT.h"
-#include "interrupt.h"
+//#include "interrupt.h"
 #include "framebuffer.h"
 #include "page_frame_allocation.h"
+#include "tasks.h"
+
 // Set the base revision to 3, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
 // See specification for further info.
@@ -207,11 +209,11 @@ void terminal_writestring(const char* data)
 
 
 void test_page_allocator() {
-    fb_terminal_writestring("Allocating 3 frames:\n");
+    fb_terminal_writestring("\nAllocating 3 frames:\n");
 
-    pageframe_t a = kalloc_frame();
-    pageframe_t b = kalloc_frame();
-    pageframe_t c = kalloc_frame();
+    pageframe_t a = kalloc_frame_int();
+    pageframe_t b = kalloc_frame_int();
+    pageframe_t c = kalloc_frame_int();
 
     fb_terminal_writestring("Frame A: "); print_hex64(a); fb_terminal_writestring("\n");
     fb_terminal_writestring("Frame B: "); print_hex64(b); fb_terminal_writestring("\n");
@@ -219,14 +221,14 @@ void test_page_allocator() {
 
     fb_terminal_writestring("Freeing frame B and reallocating:\n");
     kfree_frame(b);
-    pageframe_t d = kalloc_frame();
+    pageframe_t d = kalloc_frame_int();
 
     fb_terminal_writestring("Frame D (should match B): "); print_hex64(d); fb_terminal_writestring("\n");
 
     if (d == b) {
-        fb_terminal_writestring("✅ Allocator reused the freed frame.\n");
+        fb_terminal_writestring("Allocator reused the freed frame.\n");
     } else {
-        fb_terminal_writestring("❌ Allocator did not reuse the freed frame.\n");
+        fb_terminal_writestring("Allocator did not reuse the freed frame.\n");
     }
 }
 
@@ -241,16 +243,13 @@ void kmain(void) {
     	}
 
     	fb_terminal_init(framebuffer_request.response->framebuffers[0]);
-
-    	fb_terminal_writestring("I AM LITERALLY GOONING TO GOONER GARTWELL WHITE HE IS WHITER THAN THE FEMBOY MILK I DRINK DAILY\n");
 	serial_write_string("Coming to you live from the serial port last two gooners alive still edging it");
 	serial_write_string("Gooning has it\n");
 	setup_gdt();
-	idt_init();
-	
-	serial_write_string("Goon the jewels coming to you live from the goon cave\n");
-	fb_terminal_writestring("My name is Gooner gartwell Ghite. This is my goonfession");
-	test_page_allocator();
+	//idt_init();
+	test_task.start(&test_task);
+	test_task.run(&test_task);
+	test_task.end(&test_task);
     hcf();
 }
 
