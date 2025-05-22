@@ -1,0 +1,54 @@
+// goonal.h
+the random memory functions
+hcf() - halt
+kerror(char *msg) - kernal error 
+
+// framebuffer.h
+fb_terminal_init(struct limine_framebuffer *fb_ptr) - init terminal, neededs a framebuffer 
+fb_put_pixel(int x, int y, uint32_t color) - puts a pixel with a color (colors defined in the source file)
+fb_terminal_putchar(char c) - puts a character on screen in the basic 8x8 ascii font in white
+fb_terminal_writestring(const char* str) - writes a string in white 
+print_hex64(uint64_t val) - writes a hex64 string to the screen (i think idrk check tasks.c to find how to use it)
+clear_framebuffers(uint32_t color) - clears all of the framebuffers and replaces them with a color
+
+// GDT.h 
+encode_gdt_entry(uint8_t *target, struct GDT source) - adds something to the GDT
+setup_gdt(void) - setups up the gdt (duh)
+gdt_load_and_jump(struct GDTR* gdtr_ptr) - asm defined in the file of the same name
+
+// interrupt.h 
+idt_set_descriptor(uint8-_t vector, void* isr, uint8_t flags) - idk man
+idt_init(void) - same thing as setup_gdt()
+exceptoin_handler(int vector, uint64_t error_code) - not fully implemented
+
+// page_frame_allocation.h
+pageframe_t kalloc_frame_int(void) - allocates memory
+pageframe_t kalloc_frame(void) - allocates memory (but doesnt work apparently)
+kfree_frame(pageframe_t a) - 
+
+// serial.h
+serial_init(void) - inits the serial terminal
+serial_is_transmit_fifo_empty(void) - ??? never used at all
+serial_write_char(char a) - writes a character to the serial terminal
+serial_write_string(const char* str) - writes a string to the serial terminal
+
+// tasks.h 
+no functions but some important structs
+
+struct task
+{
+	void* memory;
+	void* (*start)(task* self);
+	void (*run)(task* self);
+	void (*end)(task* self);
+};
+// these functions are listed in the same file but are not in the struct like in oop langs 
+// tasks.c 
+task test_task = {
+	.memory = NULL,
+	.start = test_task_start,
+	.run = test_task_run,
+	.end = test_task_end
+}; 
+
+
